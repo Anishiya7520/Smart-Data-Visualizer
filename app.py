@@ -9,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Header with logo
+# Header
 col1, col2 = st.columns([1,6])
 
 with col1:
@@ -38,9 +38,10 @@ if uploaded_file:
 
     # Detect column types
     numeric_columns = data.select_dtypes(include=['int64','float64']).columns.tolist()
+    categorical_columns = data.select_dtypes(include=['object']).columns.tolist()
     all_columns = data.columns.tolist()
 
-    # Small subtle metric cards
+    # Metric Cards
     col1, col2, col3 = st.columns(3)
 
     card_style = """
@@ -87,63 +88,100 @@ if uploaded_file:
 
     chart_type = st.selectbox(
         "Choose Chart Type",
-        ["Bar Chart", "Line Chart", "Pie Chart", "Histogram"]
+        ["Bar Chart", "Line Chart", "Scatter Plot", "Histogram", "Pie Chart"]
     )
 
-    # Histogram logic (numeric only)
-    if chart_type == "Histogram":
+    # BAR CHART
+    if chart_type == "Bar Chart":
 
-        x_axis = st.selectbox("Select Numeric Column", numeric_columns)
+        col1, col2 = st.columns(2)
+
+        x_axis = col1.selectbox("Category Column", categorical_columns)
+        y_axis = col2.selectbox("Numeric Column", numeric_columns)
+
+        if st.button("Generate Chart 🚀"):
+
+            fig = px.bar(
+                data,
+                x=x_axis,
+                y=y_axis,
+                color=x_axis,
+                template="plotly_dark"
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+    # LINE CHART
+    elif chart_type == "Line Chart":
+
+        col1, col2 = st.columns(2)
+
+        x_axis = col1.selectbox("X Axis", all_columns)
+        y_axis = col2.selectbox("Y Axis (numeric)", numeric_columns)
+
+        if st.button("Generate Chart 🚀"):
+
+            fig = px.line(
+                data,
+                x=x_axis,
+                y=y_axis,
+                markers=True,
+                template="plotly_dark"
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+    # SCATTER PLOT
+    elif chart_type == "Scatter Plot":
+
+        col1, col2 = st.columns(2)
+
+        x_axis = col1.selectbox("X Numeric Column", numeric_columns)
+        y_axis = col2.selectbox("Y Numeric Column", numeric_columns)
+
+        if st.button("Generate Chart 🚀"):
+
+            fig = px.scatter(
+                data,
+                x=x_axis,
+                y=y_axis,
+                template="plotly_dark"
+            )
+
+            st.plotly_chart(fig, use_container_width=True)
+
+    # HISTOGRAM
+    elif chart_type == "Histogram":
+
+        x_axis = st.selectbox("Numeric Column", numeric_columns)
 
         if st.button("Generate Chart 🚀"):
 
             fig = px.histogram(
                 data,
                 x=x_axis,
-                nbins=20,
-                template="plotly_dark",
-                color_discrete_sequence=["#4CAF50"]
+                nbins=25,
+                template="plotly_dark"
             )
 
             st.plotly_chart(fig, use_container_width=True)
 
-    else:
+    # PIE CHART
+    elif chart_type == "Pie Chart":
 
         col1, col2 = st.columns(2)
 
-        x_axis = col1.selectbox("Select X-axis", all_columns)
-        y_axis = col2.selectbox("Select Y-axis (numeric)", numeric_columns)
+        names = col1.selectbox("Category Column", categorical_columns)
+        values = col2.selectbox("Numeric Column", numeric_columns)
 
         if st.button("Generate Chart 🚀"):
 
-            if chart_type == "Bar Chart":
-
-                fig = px.bar(
-                    data,
-                    x=x_axis,
-                    y=y_axis,
-                    color=y_axis,
-                    template="plotly_dark"
-                )
-
-            elif chart_type == "Line Chart":
-
-                fig = px.line(
-                    data,
-                    x=x_axis,
-                    y=y_axis,
-                    markers=True,
-                    template="plotly_dark"
-                )
-
-            elif chart_type == "Pie Chart":
-
-                fig = px.pie(
-                    data,
-                    names=x_axis,
-                    values=y_axis,
-                    template="plotly_dark"
-                )
+            fig = px.pie(
+                data,
+                names=names,
+                values=values,
+                template="plotly_dark"
+            )
 
             st.plotly_chart(fig, use_container_width=True)
 
